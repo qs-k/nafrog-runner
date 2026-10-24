@@ -44,8 +44,8 @@ const C = {
   track:'#7A5642', track2:'#8F6A50', tie:'#5C3F2E', rail:'#E9C97D',
   lane:'#FFE9A8', curb:'#4E382B',
   cream:'#FFF9EC', ink:'#33261F', coin:'#F6C64B', coin2:'#D99A2B',
-  frogBody:'#FFDE59', frogShade:'#F2C53B', belly:'#FFF0C2',
-  frogHand:'#6F6B46', frogHand2:'#8A8558', lid:'#B8D8A8', eye:'#FFFDF2', pupil:'#1F1F1F',
+  frogBody:'#F7CF45', frogShade:'#E5B42C', belly:'#F3E3B5',
+  frogHand:'#777247', frogHand2:'#8C8656', lid:'#A9C99A', eye:'#FFFDF2', pupil:'#1F1F1F',
   mint:'#8FE0C8', red:'#E0665A', purple:'#9B7BD4'
 };
 
@@ -623,91 +623,133 @@ function drawFrogAt(x, y, scale, t, opt){
   const p = state.player;
   const jumping = p.jumpY > 0.02;
   const rolling = p.rolling > 0;
-  const bob = jumping ? 0 : Math.sin(t*13)*3.5;
-  const legSwing = jumping ? 0.25 : Math.sin(t*13)*0.35;
-  const armSwing = jumping ? -0.5 : Math.sin(t*13+Math.PI)*0.25;
+  const bob = jumping ? 0 : Math.sin(t*12)*3;
+  const legSwing = jumping ? 0.12 : Math.sin(t*12)*0.20;
+  const armBob = jumping ? -2 : Math.sin(t*12+Math.PI)*1.8;
+
   ctx.save();
   ctx.translate(x, y + bob);
   ctx.scale(scale, scale);
-  ctx.rotate(p.lean*0.5);
-  if (rolling) { ctx.translate(0,18); ctx.scale(1.08,0.62); }
+  ctx.rotate(p.lean*0.45);
+  if (rolling) { ctx.translate(0, 30); ctx.scale(1.08, 0.60); }
 
-  // shadow handled outside
-  // scarf tails
-  ctx.save();
-  ctx.fillStyle = C.mint;
-  ctx.beginPath();
-  ctx.moveTo(-26,-78); ctx.quadraticCurveTo(-96,-94+Math.sin(t*9)*8,-122,-58+Math.sin(t*9)*10);
-  ctx.quadraticCurveTo(-84,-60,-34,-62); ctx.closePath(); ctx.fill();
-  ctx.beginPath();
-  ctx.moveTo(24,-78); ctx.quadraticCurveTo(92,-98+Math.sin(t*9+1)*8,114,-66+Math.sin(t*9+1)*10);
-  ctx.quadraticCurveTo(78,-64,32,-62); ctx.closePath(); ctx.fill();
-  ctx.restore();
+  // ---- legs (behind body) ----
+  const legGrad = ctx.createLinearGradient(-70,70,70,150);
+  legGrad.addColorStop(0,'#F9D55A'); legGrad.addColorStop(1,'#E8BB31');
+  for (const side of [-1,1]){
+    ctx.save();
+    ctx.translate(side*42, 116);
+    ctx.rotate(side*0.05 + legSwing*side*0.45);
+    ctx.fillStyle = legGrad;
+    ctx.beginPath(); ctx.ellipse(0,0,30,46,0,0,TAU); ctx.fill();
+    ctx.fillStyle = 'rgba(255,247,190,.16)';
+    ctx.beginPath(); ctx.ellipse(-8,-10,10,24,-0.1,0,TAU); ctx.fill();
+    ctx.restore();
+  }
 
-  // feet
-  ctx.fillStyle = C.frogHand;
-  ctx.save(); ctx.translate(-48, 118); ctx.rotate(legSwing*0.5);
-  ctx.beginPath(); ctx.ellipse(0,0,42,22,0.08,0,TAU); ctx.fill();
-  ctx.fillStyle = C.frogHand2; for (let i=-1;i<=1;i++){ ctx.beginPath(); ctx.ellipse(i*15,14,9,7,0,0,TAU); ctx.fill(); }
-  ctx.restore();
-  ctx.fillStyle = C.frogHand;
-  ctx.save(); ctx.translate(48, 118); ctx.rotate(-legSwing*0.5);
-  ctx.beginPath(); ctx.ellipse(0,0,42,22,-0.08,0,TAU); ctx.fill();
-  ctx.fillStyle = C.frogHand2; for (let i=-1;i<=1;i++){ ctx.beginPath(); ctx.ellipse(i*15,14,9,7,0,0,TAU); ctx.fill(); }
-  ctx.restore();
+  // ---- feet (olive) ----
+  for (const side of [-1,1]){
+    ctx.save();
+    ctx.translate(side*52, 150);
+    ctx.rotate(side*0.04 + legSwing*side*0.5);
+    const fg = ctx.createLinearGradient(-22,-12,22,22);
+    fg.addColorStop(0,'#8E8757'); fg.addColorStop(1,'#6D6944');
+    ctx.fillStyle = fg;
+    ctx.beginPath(); ctx.ellipse(0,0,42,21,0,0,TAU); ctx.fill();
+    for (let i=-1;i<=1;i++){
+      ctx.beginPath(); ctx.ellipse(i*16,13,10,8,0,0,TAU); ctx.fill();
+    }
+    ctx.fillStyle = 'rgba(255,255,220,.16)';
+    ctx.beginPath(); ctx.ellipse(-10,-6,12,6,-0.2,0,TAU); ctx.fill();
+    ctx.restore();
+  }
 
-  // body
-  const bodyGrad = ctx.createRadialGradient(-36,-100,18, -6,-10,220);
-  bodyGrad.addColorStop(0,'#FFF0A8'); bodyGrad.addColorStop(0.42,C.frogBody); bodyGrad.addColorStop(1,C.frogShade);
+  // ---- body (pear shaped, no neck) ----
+  const bodyGrad = ctx.createRadialGradient(-34,-100,16, -4,-10,235);
+  bodyGrad.addColorStop(0,'#FFE88C');
+  bodyGrad.addColorStop(0.38,'#F9D24B');
+  bodyGrad.addColorStop(0.78,'#F2C53B');
+  bodyGrad.addColorStop(1,'#E5B42C');
   ctx.fillStyle = bodyGrad;
   ctx.beginPath();
-  ctx.moveTo(0,-132);
-  ctx.bezierCurveTo(-86,-132,-112,-46,-102,34);
-  ctx.bezierCurveTo(-93,108,-52,150,0,150);
-  ctx.bezierCurveTo(52,150,93,108,102,34);
-  ctx.bezierCurveTo(112,-46,86,-132,0,-132);
+  ctx.moveTo(0,-150);
+  ctx.bezierCurveTo(-58,-150,-84,-112,-86,-60);
+  ctx.bezierCurveTo(-90,-20,-112,30,-104,72);
+  ctx.bezierCurveTo(-96,112,-58,132,0,132);
+  ctx.bezierCurveTo(58,132,96,112,104,72);
+  ctx.bezierCurveTo(112,30,90,-20,86,-60);
+  ctx.bezierCurveTo(84,-112,58,-150,0,-150);
   ctx.closePath(); ctx.fill();
-  // subtle back highlight
-  ctx.fillStyle='rgba(255,248,200,.22)';
-  ctx.beginPath(); ctx.ellipse(-34,-70,26,58,-0.2,0,TAU); ctx.fill();
 
-  // scarf band
-  ctx.fillStyle = C.mint;
-  ctx.beginPath(); ctx.ellipse(0,-84,56,15,0,0,TAU); ctx.fill();
-  ctx.fillStyle = 'rgba(255,255,255,.35)';
-  ctx.beginPath(); ctx.ellipse(-14,-86,20,5,0,0,TAU); ctx.fill();
+  ctx.fillStyle = 'rgba(255,247,190,.20)';
+  ctx.beginPath(); ctx.ellipse(-40,-92,20,56,-0.18,0,TAU); ctx.fill();
+  ctx.fillStyle = 'rgba(140,90,10,.07)';
+  ctx.beginPath(); ctx.ellipse(56,62,42,52,0.12,0,TAU); ctx.fill();
 
-  // arms
-  ctx.fillStyle = '#F5CE45';
-  ctx.save(); ctx.translate(-104, -40); ctx.rotate(0.9 + armSwing);
-  ctx.beginPath(); ctx.ellipse(0,0,21,56,0.16,0,TAU); ctx.fill();
-  ctx.fillStyle = C.frogHand; ctx.beginPath(); ctx.arc(4,50,19,0,TAU); ctx.fill();
-  ctx.restore();
-  ctx.fillStyle = '#F5CE45';
-  ctx.save(); ctx.translate(104, -40); ctx.rotate(-0.9 - armSwing);
-  ctx.beginPath(); ctx.ellipse(0,0,21,56,-0.16,0,TAU); ctx.fill();
-  ctx.fillStyle = C.frogHand; ctx.beginPath(); ctx.arc(-4,50,19,0,TAU); ctx.fill();
-  ctx.restore();
+  // ---- belly (soft cream patch) ----
+  const bellyGrad = ctx.createRadialGradient(0,18,8, 0,18,100);
+  bellyGrad.addColorStop(0,'#FBF0CF');
+  bellyGrad.addColorStop(0.72,'#F3E3B5');
+  bellyGrad.addColorStop(0.93,'rgba(243,227,181,.95)');
+  bellyGrad.addColorStop(1,'rgba(243,227,181,0)');
+  ctx.fillStyle = bellyGrad;
+  ctx.beginPath(); ctx.ellipse(0,18,92,98,0,0,TAU); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,240,.22)';
+  ctx.beginPath(); ctx.ellipse(-20,0,30,50,-0.1,0,TAU); ctx.fill();
 
-  // eyes
-  const blink = (Math.sin(t*1.7)>0.985) ? 0.18 : 1;
+  // ---- arms ----
+  const armGrad = ctx.createLinearGradient(-90,-60,0,60);
+  armGrad.addColorStop(0,'#FAD65B'); armGrad.addColorStop(1,'#F2C43B');
+  ctx.strokeStyle = armGrad; ctx.lineWidth = 34; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(-76,-52); ctx.quadraticCurveTo(-78,10,-34,34+armBob); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(76,-52); ctx.quadraticCurveTo(78,10,34,34+armBob); ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,247,190,.18)'; ctx.lineWidth = 8;
+  ctx.beginPath(); ctx.moveTo(-82,-48); ctx.quadraticCurveTo(-82,4,-44,26+armBob); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(82,-48); ctx.quadraticCurveTo(82,4,44,26+armBob); ctx.stroke();
+
+  // ---- hands resting on belly ----
+  const handGrad = ctx.createLinearGradient(-40,20,40,70);
+  handGrad.addColorStop(0,'#90895A'); handGrad.addColorStop(1,'#6F6B46');
   for (const side of [-1,1]){
-    const ex = side*42, ey = -138;
-    ctx.save(); ctx.translate(ex, ey);
-    // green lid ring
-    ctx.fillStyle = C.lid; ctx.beginPath(); ctx.ellipse(0,0,34,35,0,0,TAU); ctx.fill();
-    // eye white
-    ctx.fillStyle = C.eye; ctx.beginPath(); ctx.ellipse(0,0,25,27*blink,0,0,TAU); ctx.fill();
-    // pupil looks forward/slightly toward center
+    ctx.save();
+    ctx.translate(side*24, 44+armBob);
+    ctx.rotate(side*0.10);
+    ctx.fillStyle = handGrad;
+    ctx.beginPath(); ctx.ellipse(0,0,20,16,0,0,TAU); ctx.fill();
+    for (let i=0;i<4;i++){
+      ctx.beginPath(); ctx.ellipse(side*(-12+i*8), 10, 5, 9, side*0.12, 0, TAU); ctx.fill();
+    }
+    ctx.fillStyle = 'rgba(255,255,220,.12)';
+    ctx.beginPath(); ctx.ellipse(-6,-4,8,5,-0.2,0,TAU); ctx.fill();
+    ctx.restore();
+  }
+
+  // ---- eyes ----
+  const blink = (Math.sin(t*1.7)>0.985) ? 0.16 : 1;
+  for (const side of [-1,1]){
+    ctx.save();
+    ctx.translate(side*42,-104);
+    ctx.rotate(side*0.08);
+    ctx.fillStyle = C.lid;
+    ctx.beginPath(); ctx.ellipse(0,0,33,36,0,0,TAU); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,240,.18)';
+    ctx.beginPath(); ctx.ellipse(-6,-10,16,18,0,0,TAU); ctx.fill();
+    ctx.fillStyle = C.eye;
+    ctx.beginPath(); ctx.ellipse(0,0,25,28*blink,0,0,TAU); ctx.fill();
     if (blink > 0.5){
-      ctx.fillStyle = C.pupil; ctx.beginPath(); ctx.ellipse(side*2, 2, 12, 15, 0,0,TAU); ctx.fill();
-      ctx.fillStyle = 'rgba(255,255,255,.8)'; ctx.beginPath(); ctx.arc(side*2-4,-5,4,0,TAU); ctx.fill();
+      ctx.fillStyle = C.pupil;
+      ctx.beginPath(); ctx.ellipse(side*3,3,13,16,0,0,TAU); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,.85)';
+      ctx.beginPath(); ctx.arc(side*3-4,-6,4.2,0,TAU); ctx.fill();
     }
     ctx.restore();
   }
-  // mouth
-  ctx.strokeStyle = 'rgba(90,70,30,.6)'; ctx.lineWidth = 3; ctx.lineCap='round';
-  ctx.beginPath(); ctx.arc(0,-98,13,0.2,Math.PI-0.2); ctx.stroke();
+
+  // ---- mouth ----
+  ctx.strokeStyle = 'rgba(105,85,45,.75)';
+  ctx.lineWidth = 3; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(-15,-66); ctx.quadraticCurveTo(0,-61,15,-66); ctx.stroke();
+
   ctx.restore();
 }
 
@@ -715,7 +757,7 @@ function drawPlayer(){
   const p = state.player;
   const groundPos = P(p.x, 0, 0);
   const airPos = P(p.x, p.jumpY, 0);
-  const sc = 0.78;
+  const sc = 0.84;
   // shadow
   const sh = clamp(1 - p.jumpY*0.004, 0.35, 1);
   ctx.save(); ctx.globalAlpha = 0.28*sh;
@@ -725,7 +767,7 @@ function drawPlayer(){
   // invuln blink
   const alpha = p.invuln > 0 ? (0.35 + 0.65*Math.abs(Math.sin(state.t*24))) : 1;
   ctx.save(); ctx.globalAlpha = alpha;
-  drawFrogAt(airPos.x, airPos.y - 140*sc, sc, state.t, {});
+  drawFrogAt(airPos.x, airPos.y - 171*sc, sc, state.t, {});
   ctx.restore();
   // shield bubble
   if (state.power.shield){
@@ -816,7 +858,7 @@ function drawMenu(){
   ctx.restore();
 
   // mascot
-  ctx.save(); ctx.translate(VW/2, 410); ctx.scale(1.05,1.05); drawFrogAt(0,0,1,state.t,{}); ctx.restore();
+  ctx.save(); ctx.translate(VW/2, 385); ctx.scale(1.05,1.05); drawFrogAt(0,0,1,state.t,{}); ctx.restore();
 
   // instructions
   ctx.fillStyle='rgba(28,18,14,.48)'; panel(VW/2-300, 570, 600, 74, 18, 'rgba(28,18,14,.48)', 'rgba(255,249,236,.16)');
